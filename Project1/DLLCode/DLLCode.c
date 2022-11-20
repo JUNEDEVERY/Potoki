@@ -37,10 +37,6 @@ BOOL WINAPI DllMain(
 
 CRITICAL_SECTION selection = { 0 };
 int countProst;
-int end;
-int i;
-int j;
-
 
 int time;
 
@@ -78,49 +74,47 @@ int GetCountProstNumber(int a, int b) // Подсчет количества простых чисел
 
 
 
-DWORD WINAPI ThreadCountProstNumber(LPVOID param)
-{
-	while (1)
-	{
-		if (i < end)
-		{
-			
-			if (GetProst(i) == TRUE)
-			{
-				EnterCriticalSection(&selection);
-				countProst++;
-				LeaveCriticalSection(&selection);
-
-			}
-			i++;
-		}
-		else
-		{
-			break;
-		}
-	}
-}
-
-//DWORD WINAPI ThreadCountProstNumberThread1(int a, int b)
+//DWORD WINAPI ThreadCountProstNumber(LPVOID param)
 //{
-//	for (int i = a; i <= b; i++)
+//	while (1)
 //	{
-//		if (GetProst(i) == TRUE)
+//		if (i < end)
 //		{
-//			countProst++;
+//			EnterCriticalSection(&selection);
+//			if (GetProst(i) == TRUE)
+//			{
+//				countProst++;
+//			}
+//			i++;
+//			LeaveCriticalSection(&selection);
+//		}
+//		else
+//		{
+//			break;
 //		}
 //	}
 //}
 
+DWORD WINAPI ThreadCountProstNumberThread1(int a[])
+{
+	for (int i = a[0]; i <= a[1]; i++)
+	{
+		if (GetProst(i) == TRUE)
+		{
+			EnterCriticalSection(&selection);
+			countProst++;
+			LeaveCriticalSection(&selection);
+		}
+	}
+}
+
 int GetCountThert(int a, int b, int c) // Функция которая определяет простые числа в несколько потоков
 {
 	int st_time = clock();
-	end = b;
-	i = a;
 	countProst = 0;
 	HANDLE* tThread = calloc(c, sizeof(HANDLE));
 	
-	InitializeCriticalSection(&selection);
+	/*InitializeCriticalSection(&selection);
 	int st = clock();
  	for (j = 0; j < c; j++)
 	{
@@ -132,30 +126,32 @@ int GetCountThert(int a, int b, int c) // Функция которая определяет простые чис
 	int end_time = clock();
 	time = end_time - st_time - (end - st);
 	return countProst;
-
-
-
-
-	/*
+	*/
+	InitializeCriticalSection(&selection);
 	int v = 0;
 	int p = (b - a) / c;
-	for (int i = 0; i < c; i+=p)
+	int st = clock();
+	for (int i = 1; i <= b - p; i+=p+1)
 	{
-		if (i + p > c)
-		{
-
-		}
 		int param[2];
-		param[0] = i;
-
-		if (i + 1 == c)
+		if (i + p > b)
 		{
-			tThread[i] = CreateThread(NULL, 0, ThreadCountProstNumberThread1, NULL, 0, 0);
+			param[0] = i;
+			param[1] = b;
 		}
 		else
 		{
-			tThread[i] = CreateThread(NULL, 0, ThreadCountProstNumberThread1, NULL, 0, 0);
+			param[0] = i;
+			param[1] = i + p;
 		}
+		tThread[v] = CreateThread(NULL, 0, ThreadCountProstNumberThread1, param, 0, 0);
+		Sleep(2);
+		v++;
 	}
-	*/
+	int end = clock();
+	WaitForMultipleObjects(c, tThread, TRUE, INFINITE);
+	DeleteCriticalSection(&selection);
+	int end_time = clock();
+	time = end_time - st_time - (end - st);
+	return countProst;
 }
