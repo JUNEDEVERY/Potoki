@@ -6,8 +6,9 @@
 #include <malloc.h>
 #include <Windows.h>
 
-__declspec(dllexport) int GetCountProstNumber(int, int);
-__declspec(dllexport) int GetCountThert(int, int, int);
-
-typedef int(_cdecl* MyFunctionCountProstNumber)(int, int);
-typedef int(_cdecl* MyFunctionCountProstNumberThear)(int, int, int);
+struct result
+{
+	int time;
+	int count;
+};
+typedef struct result res;
