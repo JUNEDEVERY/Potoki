@@ -1,67 +1,53 @@
 #include "..\Project1\Header.h"
 
-BOOL WINAPI DllMain(
-	HINSTANCE hinstDLL,  // handle to DLL module
-	DWORD dwReason,     // reason for calling function
-	LPVOID ipReserved)  // reserved
+BOOL WINAPI DllMain(HINSTANCE hlnstDll, DWORD dwReason, LPVOID IpReserved)
 {
-	BOOL ballWentWell = TRUE;
+	BOOL bAllWentWell = TRUE; //  “ ¬’ќƒј
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-		// Initialize once for each new process.
-		// Return FALSE to fail DLL load.1
 		break;
-
 	case DLL_THREAD_ATTACH:
-		// Do thread-specific initialization.
 		break;
-
 	case DLL_THREAD_DETACH:
-		// Do thread-specific cleanup.
 		break;
-
 	case DLL_PROCESS_DETACH:
 		break;
 	}
-
-	if (ballWentWell)
-	{
+	if (bAllWentWell)
 		return TRUE;
-	}
 	else
-	{
 		return FALSE;
-	}
 }
 
 CRITICAL_SECTION selection = { 0 };
-int countProst;
+int chisloProstyx;
+int time; // в тактах
 
-int time;
-
-BOOL GetProst(int n) // ќпределение простого числа
+BOOL GetProst(int n) // простое число
 {
 	if (n > 1)
 	{
+		// в цикле перебираем числа от 2 до n - 1
 		for (int i = 2; i < n; i++)
 		{
-			if (n % i == 0)
-			{
+			if (n % i == 0) // если n делитс€ без остатка на i - возвращаем false (число не простое)
+			
 				return FALSE;
-			}
+			
 		}
+		// если программа дошла до данного оператора, то возвращаем true (число простое) - проверка пройдена
 		return TRUE;
 	}
-	else
-	{
-		return FALSE;
-	}
+	// если программа дошла до данного оператора, то возвращаем true (число простое) - проверка пройдена
+	else return FALSE;
+		
+	
 }
 
 __declspec(dllexport)res GetCountProstNumber(int a, int b) // ѕодсчет количества простых чисел
 {
-	int st = clock();
+	int start = clock();
 	int count = 0;
 	for (int i = a; i <= b; i++)
 	{
@@ -71,39 +57,39 @@ __declspec(dllexport)res GetCountProstNumber(int a, int b) // ѕодсчет количества
 		}
 	}
 	int end = clock();
-	time = end - st;
+	time = end - start;  // разница между конечным и начальным временем в тактах (сколько времени все выполн€лось в тактах)
 	res r;
 	r.time = time;
 	r.count = count;
 	return r;
 }
 
-DWORD WINAPI ThreadCountProstNumberThread1(int a[])
+DWORD WINAPI PotolProstyxChisel(int a[])
 {
 	int in = 0,b= a[0],b1= a[1];
 	for (int i = b; i <= b1; i++)
 	{
 		if (GetProst(i) == TRUE)
 		{
-			EnterCriticalSection(&selection);
-			countProst++;
+			EnterCriticalSection(&selection); // к.с - доступ получает один поток и все процессы ожидают его завершени€
+			chisloProstyx++; // если процесс попытаетс€ обратитьс€, то процесс будет ждать лив
 			LeaveCriticalSection(&selection);
 		}
 	}
 }
 
-__declspec(dllexport)res GetCountThert(int a, int b, int c) // ‘ункци€ котора€ определ€ет простые числа в несколько потоков
+__declspec(dllexport)res GetCountThert(int a, int b, int c) // простые числа в несколько потоков
 {
 	int st = clock();
-	countProst = 0;
+	chisloProstyx = 0;
 	HANDLE* tThread = calloc(c, sizeof(HANDLE));
 	InitializeCriticalSection(&selection);
 	int v = 0;
-	int p = (b / c)-1;
+	int p = (b / c) - 1; //  определение шага
 	for (int i = a; i <= b - p; i+=p+1)
 	{
 		int param[2];
-		if (i + p >= b-1)
+		if (i + p >= b-1)             // текущее начало + шаг ( в последний поток ставим граничное значение b без шага)
 		{
 			param[0] = i;
 			param[1] = b;
@@ -113,7 +99,7 @@ __declspec(dllexport)res GetCountThert(int a, int b, int c) // ‘ункци€ котора€ о
 			param[0] = i;
 			param[1] = i + p;
 		}
-		tThread[v] = CreateThread(NULL, 0, ThreadCountProstNumberThread1, param, 0, 0);
+		tThread[v] = CreateThread(NULL, 0, PotolProstyxChisel, param, 0, 0);
 		Sleep(1);
 		v++;
 	}
@@ -123,6 +109,6 @@ __declspec(dllexport)res GetCountThert(int a, int b, int c) // ‘ункци€ котора€ о
 	time = end - st;
 	res r;
 	r.time = time;
-	r.count = countProst;
+	r.count = chisloProstyx;
 	return r;
 }
